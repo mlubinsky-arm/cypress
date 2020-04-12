@@ -24,6 +24,13 @@
 
 #include "mbed-trace/mbed_trace.h"             // Required for mbed_trace_*
 
+DigitalOut thermVDD(P10_3,1);
+DigitalOut thermGND(P10_0,0);
+AnalogIn thermOut(P10_1);
+DigitalOut led(LED1);
+
+// float readTemp();
+
 // Pointers to the resources that will be created in main_application().
 static MbedCloudClient *cloud_client;
 static bool cloud_client_running = true;
@@ -40,6 +47,25 @@ static M2MResource* m2m_deregister_res;
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
 Thread t;
 Mutex value_increment_mutex;
+
+
+float readTemp()
+{
+    float refVoltage = thermOut.read() * 2.4; // Range of ADC 0->2*Vref
+    float refCurrent = refVoltage  / 10000.0; // 10k Reference Resistor
+    float thermVoltage = 3.3 - refVoltage;    // Assume supply voltage is 3.3v
+    float thermResistance = thermVoltage / refCurrent;
+    float logrT = (float32_t)log((float64_t)thermResistance);
+
+    /* Calculate temperature from the resistance of thermistor using Steinhart-Hart Equation */
+    float stEqn = (float32_t)((0.0009032679) + ((0.000248772) * logrT) +
+                             ((2.041094E-07) * pow((float64)logrT, (float32)3)));
+
+    float temperatureC = (float32_t)(((1.0 / stEqn) - 273.15)  + 0.5);
+    float temperatureF = (temperatureC * 9.0/5.0) + 32;
+
+    return temperatureF;
+}
 
 void print_client_ids(void)
 {
@@ -103,9 +129,21 @@ void update_progress(uint32_t progress, uint32_t total)
     uint8_t percent = (uint8_t)((uint64_t)progress * 100 / total);
     printf("Update progress = %" PRIu8 "%%\n", percent);
 }
+int temp()
+{
+   while (true) {
+        led = !led; //blink an led for fun
+        float tempF = readTemp();  //read the temperature
+        printf("Current temp (F): %f\r\n", tempF);
+        ThisThread::sleep_for(5000); //wait 5 sec - don't block, let other threads run
+   }
+}
 
 int main(void)
 {
+    temp(); // unlimited loop
+    // we never rich this point because temp() is unlimited loop
+
     int status;
 
     status = mbed_trace_init();
