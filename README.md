@@ -6,6 +6,8 @@
 
 Forked from <https://github.com/maclobdell/mbed-os-example-pelion/tree/add-cy8cproto-062-4343w-5.13.4>
 ```
+mbed status
+mbed device-management init -d arm.com --model-name example-app --force -q
 mbed compile -m CY8CPROTO_062_4343W -t GCC_ARM
 ```
 
