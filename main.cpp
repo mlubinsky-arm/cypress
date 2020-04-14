@@ -131,18 +131,24 @@ void update_progress(uint32_t progress, uint32_t total)
 }
 int temp()
 {
+   int i=0;
    while (true) {
+        printf("counter : %d\r\n", i);
+        i = i + 1;
+        if (i > 100) i=0;
+
         led = !led; //blink an led for fun
         float tempF = readTemp();  //read the temperature
         printf("Current temp (F): %f\r\n", tempF);
+
         ThisThread::sleep_for(5000); //wait 5 sec - don't block, let other threads run
+
    }
 }
 
 int main(void)
 {
-    temp(); // unlimited loop
-    // we never rich this point because temp() is unlimited loop
+    //  temp(); // unlimited loop
 
     int status;
 
